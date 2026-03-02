@@ -141,10 +141,7 @@
             Salsa: { saldo: 0, history: [] },
             Kurnia: { saldo: 0, history: [] }
         };
-        const initialOrders = [
-            { id: 101, date: new Date().toISOString(), source: 'Umum / Acara', namaPemesan: 'Bpk. Budi', details: 'Pesanan: 1x Paket Sedang\nCatatan: Jam 4 Sore', status: 'Pending', total: 2500000, dp: 500000 },
-            { id: 102, date: new Date(Date.now() - 86400000).toISOString(), source: 'Katering Salsa', namaPemesan: '', details: 'Pesanan: 200 Tusuk Sate Ayam', status: 'Selesai', total: 200000, dp: 0 }
-        ];
+        const initialOrders = [];
         const initialGoatSuppliers = [
             { id: 1, name: 'Pak Haji Rohman', hutang: 0, lastTx: null },
             { id: 2, name: 'Cak Nur Kambing', hutang: 0, lastTx: null }
@@ -887,9 +884,9 @@
                 const amount = unformatRibuan(form.amount); if(!amount) return;
                 const dateStr = new Date().toISOString(); const supplierName = goatSuppliers.find(s => s.id === parseInt(form.supplierId))?.name || 'Pedagang';
 
-                setGoatSuppliers(suppliers => suppliers.map(s => { if(s.id === parseInt(form.supplierId)) { return { ...s, hutang: form.type === 'tambah_hutang' ? s.hutang + amount : Math.max(0, s.hutang - amount), lastTx: dateStr }; } return s; }));
+                setGoatSuppliers(suppliers => suppliers.map(s => { if(s.id === parseInt(form.supplierId)) { return { ...s, hutang: form.type === 'tambah_hutang' ? s.hutang + amount : s.hutang - amount, lastTx: dateStr }; } return s; }));
 
-                if(form.type === 'bayar_hutang') { setTransactions([{ id: Date.now(), date: dateStr, type: 'pengeluaran', amount, desc: `Bayar Hutang: ${supplierName}` }, ...transactions]); showToast(`Pembayaran dicatat.`); } else { setTransactions([{ id: Date.now(), date: dateStr, type: 'hutang_kambing', amount, desc: `Ambil Kambing: ${supplierName}` }, ...transactions]); showToast(`Hutang ditambahkan.`); }
+                if(form.type === 'bayar_hutang') { setTransactions([{ id: Date.now(), date: dateStr, type: 'pengeluaran', amount, desc: `Bayar Hutang / Deposit: ${supplierName}` }, ...transactions]); showToast(`Pembayaran dicatat.`); } else { setTransactions([{ id: Date.now(), date: dateStr, type: 'hutang_kambing', amount, desc: `Ambil Kambing: ${supplierName}` }, ...transactions]); showToast(`Hutang ditambahkan.`); }
                 setForm({...form, amount: ''});
             };
 
@@ -917,7 +914,16 @@
                                     <div key={supplier.id} className="bg-[#15161c] p-6 rounded-3xl border border-white/5 shadow-xl hover:border-white/10 transition-colors flex flex-col md:flex-row md:justify-between md:items-center relative group">
                                         <button onClick={() => handleDeleteSupplier(supplier.id, supplier.name)} className={`absolute top-4 right-4 p-2 rounded-lg text-white transition-all opacity-0 group-hover:opacity-100 ${confirmDelete === supplier.id ? 'bg-rose-500 animate-pulse opacity-100' : 'bg-[#0d0e12] hover:bg-rose-500 border border-white/5'}`}>{confirmDelete === supplier.id ? <Icons.Trash2 size={14} /> : <Icons.X size={14} />}</button>
                                         <div className="mb-4 md:mb-0"><h4 className="font-semibold text-lg text-white flex items-center pr-10"><Icons.Beef size={18} className="mr-2 text-slate-500"/> {supplier.name}</h4><p className="text-xs text-slate-500 mt-1.5 flex items-center"><Icons.Clock size={12} className="mr-1"/> Update: {formatDate(supplier.lastTx)}</p></div>
-                                        <div className="md:text-right"><p className="text-[10px] font-medium text-slate-500 uppercase tracking-widest mb-1">Tagihan Aktif</p><div className={`text-xl font-semibold px-4 py-2 rounded-xl inline-block border ${supplier.hutang > 0 ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}`}>{formatRupiah(supplier.hutang)}</div></div>
+                                        <div className="md:text-right">
+                                            <p className="text-[10px] font-medium text-slate-500 uppercase tracking-widest mb-1">
+                                                {supplier.hutang > 0 ? 'Tagihan Aktif' : supplier.hutang < 0 ? 'Saldo Deposit' : 'Tagihan / Saldo'}
+                                            </p>
+                                            <div className={`text-xl font-semibold px-4 py-2 rounded-xl inline-flex items-center border ${supplier.hutang > 0 ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : supplier.hutang < 0 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-white/5 text-slate-400 border-white/10'}`}>
+                                                {supplier.hutang > 0 && <Icons.TrendingDown size={18} className="mr-2" />}
+                                                {supplier.hutang < 0 && <Icons.TrendingUp size={18} className="mr-2" />}
+                                                {supplier.hutang > 0 ? '-' : supplier.hutang < 0 ? '+' : ''}{formatRupiah(Math.abs(supplier.hutang))}
+                                            </div>
+                                        </div>
                                     </div>
                                 ))
                             )}
