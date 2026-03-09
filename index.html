@@ -84,7 +84,8 @@
             MoreHorizontal: (props) => <Icon path='<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>' {...props} />,
             BarChart3: (props) => <Icon path='<path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>' {...props} />,
             Package: (props) => <Icon path='<line x1="16.5" x2="7.5" y1="9.4" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" x2="12" y1="22.08" y2="12"/>' {...props} />,
-            Menu: (props) => <Icon path='<line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/>' {...props} />
+            Menu: (props) => <Icon path='<line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/>' {...props} />,
+            Settings: (props) => <Icon path='<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>' {...props} />
         };
 
         // --- BANTUAN TANGGAL & FORMAT ---
@@ -114,6 +115,12 @@
             { id: 1, name: 'Pak Haji Rohman', hutang: 0, lastTx: null }
         ];
 
+        // Default Login Akun
+        const defaultAuth = {
+            admin: { user: 'owner', pass: '123' },
+            pos: { user: 'pegawai', pass: '123' }
+        };
+
         const menuPackages = [
             { id: 1, name: 'Paket Hemat', price: 'Rp 2.25jt', desc: '1 Ekor, 400 Sate, 1 Panci Gule' },
             { id: 2, name: 'Paket Sedang', price: 'Rp 2.5jt', desc: '1 Ekor, 500 Sate, 1 Panci Gule' },
@@ -136,17 +143,19 @@
         );
 
         // --- KOMPONEN LOGIN ---
-        const LoginScreen = ({ onLogin, showToast }) => {
+        const LoginScreen = ({ onLogin, showToast, authCredentials }) => {
             const [username, setUsername] = useState('');
             const [password, setPassword] = useState('');
 
             const handleLogin = (e) => {
                 e.preventDefault();
-                // Login Level Aplikasi (Gatekeeper)
-                if (username === 'owner' && password === '123') {
+                // Mengambil data dari Cloud atau memakai Default jika Cloud kosong
+                const creds = authCredentials || defaultAuth;
+
+                if (username === creds.admin.user && password === creds.admin.pass) {
                     onLogin({ name: 'Bpk. Owner', role: 'admin' });
                     showToast('Berhasil login sebagai Owner');
-                } else if (username === 'pegawai' && password === '123') {
+                } else if (username === creds.pos.user && password === creds.pos.pass) {
                     onLogin({ name: 'Kasir Sate', role: 'pos' });
                     showToast('Berhasil login sebagai Pegawai');
                 } else {
@@ -174,7 +183,8 @@
                                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                         <Icons.User size={18} className="text-slate-400" />
                                     </div>
-                                    <input type="text" value={username} onChange={e => setUsername(e.target.value)} required placeholder="Ketik: owner / pegawai" className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none text-sm text-slate-800 transition-all font-medium" />
+                                    {/* Placeholder diperbarui menjadi lebih aman */}
+                                    <input type="text" value={username} onChange={e => setUsername(e.target.value)} required placeholder="Masukkan username akun Anda" className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none text-sm text-slate-800 transition-all font-medium" />
                                 </div>
                             </div>
                             <div>
@@ -183,7 +193,8 @@
                                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                         <Icons.Briefcase size={18} className="text-slate-400" />
                                     </div>
-                                    <input type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="Ketik: 123" className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none text-sm text-slate-800 transition-all font-medium" />
+                                    {/* Placeholder diperbarui menjadi lebih aman */}
+                                    <input type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="Masukkan kata sandi rahasia" className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none text-sm text-slate-800 transition-all font-medium" />
                                 </div>
                             </div>
                             <button type="submit" className="w-full py-3.5 bg-brand-600 hover:bg-brand-700 text-white rounded-2xl font-bold transition-all shadow-md shadow-brand-500/20 mt-2">Masuk ke Sistem</button>
@@ -194,6 +205,79 @@
         };
 
         // --- KOMPONEN TAB ---
+
+        const PengaturanAkun = ({ authCredentials, updateAuth, showToast }) => {
+            const [form, setForm] = useState(authCredentials || defaultAuth);
+
+            const handleSave = (e) => {
+                e.preventDefault();
+                updateAuth(form);
+                showToast('Informasi login berhasil diperbarui di Cloud!');
+            };
+
+            return (
+                <div className="space-y-6 animate-fade-in pb-10">
+                    <div>
+                        <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Pengaturan Akses Login</h2>
+                        <p className="text-sm text-slate-500 mt-1">Ubah username dan password untuk keamanan sistem warung Anda.</p>
+                    </div>
+
+                    <form onSubmit={handleSave} className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Akun Admin/Owner */}
+                            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-brand-50 rounded-full blur-3xl pointer-events-none"></div>
+                                <div className="flex items-center space-x-3 mb-6 border-b border-slate-100 pb-4 relative z-10">
+                                    <div className="bg-brand-50 p-2 rounded-xl border border-brand-100"><Icons.Settings size={20} className="text-brand-600"/></div>
+                                    <div>
+                                        <h3 className="text-lg font-bold text-slate-800">Akun Owner (Admin)</h3>
+                                        <p className="text-xs text-slate-500">Akses penuh ke semua laporan & pengaturan.</p>
+                                    </div>
+                                </div>
+                                <div className="space-y-4 relative z-10">
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Username Admin Baru</label>
+                                        <input type="text" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 text-sm font-medium text-slate-800 transition-all" value={form.admin.user} onChange={e => setForm({...form, admin: {...form.admin, user: e.target.value}})} required />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Password Admin Baru</label>
+                                        <input type="text" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 text-sm font-medium text-slate-800 transition-all" value={form.admin.pass} onChange={e => setForm({...form, admin: {...form.admin, pass: e.target.value}})} required />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Akun Pegawai/Kasir */}
+                            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-full blur-3xl pointer-events-none"></div>
+                                <div className="flex items-center space-x-3 mb-6 border-b border-slate-100 pb-4 relative z-10">
+                                    <div className="bg-emerald-50 p-2 rounded-xl border border-emerald-100"><Icons.User size={20} className="text-emerald-600"/></div>
+                                    <div>
+                                        <h3 className="text-lg font-bold text-slate-800">Akun Kasir (Pegawai)</h3>
+                                        <p className="text-xs text-slate-500">Hanya bisa akses menu Input Transaksi Kasir.</p>
+                                    </div>
+                                </div>
+                                <div className="space-y-4 relative z-10">
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Username Kasir Baru</label>
+                                        <input type="text" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm font-medium text-slate-800 transition-all" value={form.pos.user} onChange={e => setForm({...form, pos: {...form.pos, user: e.target.value}})} required />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Password Kasir Baru</label>
+                                        <input type="text" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm font-medium text-slate-800 transition-all" value={form.pos.pass} onChange={e => setForm({...form, pos: {...form.pos, pass: e.target.value}})} required />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end">
+                            <button type="submit" className="bg-brand-600 hover:bg-brand-700 text-white px-8 py-3.5 rounded-2xl font-bold transition-all shadow-md shadow-brand-500/20">
+                                Simpan Perubahan Sandi
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            );
+        };
 
         const Beranda = ({ stats, transactions, setTab, orders }) => {
             const [filterPesanan, setFilterPesanan] = useState('Semua'); 
@@ -1038,12 +1122,13 @@
             // State Database Cloud (Firebase)
             const [fbConfig, setFbConfig] = useState(null);
             const [isDbReady, setIsDbReady] = useState(false);
+            const [authCredentials, setAuthCredentials] = useState(null); // Menyimpan Akun Login
             const [transactions, setTransactions] = useState([]);
             const [catering, setCatering] = useState(initialCatering);
             const [orders, setOrders] = useState([]);
             const [goatSuppliers, setGoatSuppliers] = useState(initialGoatSuppliers);
 
-            // 1. Inisialisasi Firebase Menggunakan Data Config Anda Sendiri
+            // 1. Inisialisasi Firebase
             useEffect(() => {
                 let interval = setInterval(() => {
                     if (window.FirebaseLib) {
@@ -1051,7 +1136,6 @@
                         try {
                             const { initializeApp, getFirestore, getAuth, signInAnonymously, onAuthStateChanged } = window.FirebaseLib;
                             
-                            // INI ADALAH CONFIG ANDA ("caksabarmj-app")
                             const config = {
                                 apiKey: "AIzaSyD_PNjLDEgBv_qA32RB9XvXb9ht-WIrDQY",
                                 authDomain: "caksabarmj-app.firebaseapp.com",
@@ -1066,22 +1150,14 @@
                             const auth = getAuth(app);
                             const db = getFirestore(app);
                             
-                            // Otentikasi Anonim
                             const initAuth = async () => {
-                                try {
-                                    await signInAnonymously(auth);
-                                } catch (error) {
-                                    console.error("Auth Error:", error);
-                                }
+                                try { await signInAnonymously(auth); } catch (error) { console.error("Auth Error:", error); }
                             };
                             
                             initAuth();
 
-                            // Tunggu status login dari Firebase
                             onAuthStateChanged(auth, (user) => {
-                                if (user) {
-                                    setFbConfig({ db, user, ...window.FirebaseLib });
-                                }
+                                if (user) { setFbConfig({ db, user, ...window.FirebaseLib }); }
                             });
                         } catch(e) { console.error("Firebase Init Error:", e); }
                     }
@@ -1089,82 +1165,74 @@
                 return () => clearInterval(interval);
             }, []);
 
-            // 2. Sinkronisasi Data secara Real-Time (onSnapshot) menggunakan standar path Firestore baru
+            // 2. Sinkronisasi Data secara Real-Time (termasuk Auth)
             useEffect(() => {
                 if (!fbConfig || !fbConfig.user) return;
                 const { db, collection, onSnapshot, doc } = fbConfig;
 
-                // Penanganan Error Permissions tanpa memunculkan error berulang di Console
-                const handleError = (err) => {
-                    console.error("Firestore Listen Error:", err);
-                };
+                const handleError = (err) => { console.error("Firestore Listen Error:", err); };
 
-                // Listen Transactions
+                // Listen Auth Settings (Password)
+                const unsubAuth = onSnapshot(doc(db, 'settings', 'auth'), (d) => {
+                    if (d.exists() && d.data().data) { setAuthCredentials(d.data().data); } 
+                    else { setAuthCredentials(defaultAuth); }
+                }, handleError);
+
                 const unsubTx = onSnapshot(collection(db, 'transactions'), (snap) => {
                     const data = snap.docs.map(d => ({id: d.id, ...d.data()}));
                     data.sort((a,b) => new Date(b.date) - new Date(a.date));
                     setTransactions(data);
                 }, handleError);
 
-                // Listen Orders
                 const unsubOrders = onSnapshot(collection(db, 'orders'), (snap) => {
                     const data = snap.docs.map(d => ({id: d.id, ...d.data()}));
                     data.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
                     setOrders(data);
                 }, handleError);
 
-                // Listen Catering Config
                 const unsubCat = onSnapshot(doc(db, 'settings', 'catering'), (d) => {
-                    if (d.exists() && d.data().data) { setCatering(d.data().data); } 
-                    else { setCatering(initialCatering); } // Fallback
+                    if (d.exists() && d.data().data) { setCatering(d.data().data); } else { setCatering(initialCatering); }
                 }, handleError);
 
-                // Listen Suppliers
                 const unsubSup = onSnapshot(doc(db, 'settings', 'suppliers'), (d) => {
-                    if (d.exists() && d.data().list) { setGoatSuppliers(d.data().list); } 
-                    else { setGoatSuppliers(initialGoatSuppliers); } // Fallback
+                    if (d.exists() && d.data().list) { setGoatSuppliers(d.data().list); } else { setGoatSuppliers(initialGoatSuppliers); }
                 }, handleError);
 
-                setIsDbReady(true); // Matikan loading screen
+                setIsDbReady(true);
                 
-                return () => { unsubTx(); unsubOrders(); unsubCat(); unsubSup(); };
+                return () => { unsubTx(); unsubOrders(); unsubCat(); unsubSup(); unsubAuth(); };
             }, [fbConfig]);
 
 
             // 3. Fungsi-fungsi untuk Menulis ke Database Cloud
             const addTransactionToCloud = async (newTx) => {
                 if(!fbConfig) return;
-                try {
-                    await fbConfig.addDoc(fbConfig.collection(fbConfig.db, 'transactions'), newTx);
-                } catch (e) { console.error(e); }
+                try { await fbConfig.addDoc(fbConfig.collection(fbConfig.db, 'transactions'), newTx); } catch (e) { console.error(e); }
             };
 
             const addOrderToCloud = async (newOrder) => {
                 if(!fbConfig) return;
-                try {
-                    await fbConfig.addDoc(fbConfig.collection(fbConfig.db, 'orders'), newOrder);
-                } catch (e) { console.error(e); }
+                try { await fbConfig.addDoc(fbConfig.collection(fbConfig.db, 'orders'), newOrder); } catch (e) { console.error(e); }
             };
 
             const updateOrderInCloud = async (id, updates) => {
                 if(!fbConfig) return;
-                try {
-                    await fbConfig.updateDoc(fbConfig.doc(fbConfig.db, 'orders', id), updates);
-                } catch (e) { console.error(e); }
+                try { await fbConfig.updateDoc(fbConfig.doc(fbConfig.db, 'orders', id), updates); } catch (e) { console.error(e); }
             };
 
             const updateCateringInCloud = async (newCateringData) => {
                 if(!fbConfig) return;
-                try {
-                    await fbConfig.setDoc(fbConfig.doc(fbConfig.db, 'settings', 'catering'), { data: newCateringData });
-                } catch (e) { console.error(e); }
+                try { await fbConfig.setDoc(fbConfig.doc(fbConfig.db, 'settings', 'catering'), { data: newCateringData }); } catch (e) { console.error(e); }
             };
 
             const updateSuppliersInCloud = async (newSuppliers) => {
                 if(!fbConfig) return;
-                try {
-                    await fbConfig.setDoc(fbConfig.doc(fbConfig.db, 'settings', 'suppliers'), { list: newSuppliers });
-                } catch (e) { console.error(e); }
+                try { await fbConfig.setDoc(fbConfig.doc(fbConfig.db, 'settings', 'suppliers'), { list: newSuppliers }); } catch (e) { console.error(e); }
+            };
+
+            const updateAuthInCloud = async (newAuthData) => {
+                if(!fbConfig) return;
+                try { await fbConfig.setDoc(fbConfig.doc(fbConfig.db, 'settings', 'auth'), { data: newAuthData }); } catch (e) { console.error(e); }
             };
 
             // --- Bantuan UI & Logic ---
@@ -1202,7 +1270,6 @@
 
             useEffect(() => { if (authUser) { setAccessMode(authUser.role); setActiveTab(authUser.role === 'pos' ? 'transaksi' : 'beranda'); } }, [authUser]);
 
-            // Tampilan Loading Database
             if (!isDbReady) {
                 return (
                     <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-50">
@@ -1212,12 +1279,11 @@
                 );
             }
 
-            // Tampilan Login
             if (!authUser) {
                 return (
                     <div className="h-screen w-full bg-slate-50 flex font-sans text-slate-700 selection:bg-brand-500/20 overflow-hidden">
                         <Toast message={toastMessage} isVisible={showToastObj} />
-                        <LoginScreen onLogin={setAuthUser} showToast={showToast} />
+                        <LoginScreen onLogin={setAuthUser} showToast={showToast} authCredentials={authCredentials} />
                     </div>
                 );
             }
@@ -1235,7 +1301,6 @@
 
                     {isSidebarOpen && <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-30 md:hidden animate-fade-in" onClick={() => setIsSidebarOpen(false)}/>}
 
-                    {/* Sidebar Navigation */}
                     <aside className={`fixed md:relative inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 flex flex-col flex-shrink-0 transform transition-all duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:-ml-64 shadow-none'} shadow-[4px_0_24px_rgba(0,0,0,0.05)] md:shadow-none`}>
                         <div className="p-6 pb-4 flex justify-between items-center">
                             <div className="flex items-center space-x-3 mb-1"><div className="bg-brand-600 text-white p-1.5 rounded-xl shadow-sm"><Icons.Utensils size={18} /></div><h1 className="text-xl font-black tracking-tight text-slate-800">SateGule<sup className="text-[10px] text-brand-500">®</sup></h1></div>
@@ -1256,14 +1321,17 @@
                                     <SidebarItem id="beranda" icon={Icons.Activity} label="Dashboard" />
                                     <SidebarItem id="transaksi" icon={Icons.ArrowRightLeft} label="Kasir" />
                                     <SidebarItem id="laporan" icon={Icons.FileText} label="Laporan" tag="API" />
+                                    
                                     <div className="my-6 border-t border-slate-100 mx-4"></div>
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 px-4 flex items-center"><Icons.Briefcase size={12} className="mr-2"/> Operasional</p>
                                     <SidebarItem id="katering" icon={Icons.Briefcase} label="Mitra" />
                                     <SidebarItem id="tambah_pesanan" icon={Icons.Plus} label="Order Baru" />
                                     <SidebarItem id="jadwal_pesanan" icon={Icons.CalendarDays} label="Antrean" badge={pendingOrders.length} />
+                                    
                                     <div className="my-6 border-t border-slate-100 mx-4"></div>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 px-4 flex items-center"><Icons.Beef size={12} className="mr-2"/> Eksternal</p>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 px-4 flex items-center"><Icons.Beef size={12} className="mr-2"/> Eksternal & Sistem</p>
                                     <SidebarItem id="kambing" icon={Icons.Beef} label="Suplier" />
+                                    <SidebarItem id="pengaturan" icon={Icons.Settings} label="Pengaturan Akses" />
                                 </React.Fragment>
                             ) : (
                                 <React.Fragment>
@@ -1282,7 +1350,6 @@
                         </div>
                     </aside>
 
-                    {/* Main Content Area */}
                     <main className="flex-1 flex flex-col min-w-0 bg-slate-50 h-screen relative transition-all duration-300">
                         <header className="flex-shrink-0 border-b border-slate-200 px-4 md:px-6 py-4 flex justify-between items-center z-20 bg-white/80 backdrop-blur-md sticky top-0">
                             <div className="flex items-center space-x-3">
@@ -1328,6 +1395,7 @@
                             <div className={`absolute inset-0 overflow-y-auto p-4 md:p-8 custom-scrollbar ${activeTab === 'tambah_pesanan' ? 'block' : 'hidden'}`}><div className="max-w-6xl mx-auto"><FormTambahPesanan addOrder={addOrderToCloud} addTransaction={addTransactionToCloud} catering={catering} showToast={showToast} /></div></div>
                             <div className={`absolute inset-0 overflow-y-auto p-4 md:p-8 custom-scrollbar ${activeTab === 'jadwal_pesanan' ? 'block' : 'hidden'}`}><div className="max-w-6xl mx-auto"><JadwalPesanan orders={orders} updateOrder={updateOrderInCloud} catering={catering} updateCatering={updateCateringInCloud} addTransaction={addTransactionToCloud} showToast={showToast} searchTerm={globalSearchTerm} setSearchTerm={setGlobalSearchTerm} /></div></div>
                             <div className={`absolute inset-0 overflow-y-auto p-4 md:p-8 custom-scrollbar ${activeTab === 'kambing' ? 'block' : 'hidden'}`}><div className="max-w-6xl mx-auto"><KeuanganKambing goatSuppliers={goatSuppliers} updateSuppliers={updateSuppliersInCloud} addTransaction={addTransactionToCloud} showToast={showToast} /></div></div>
+                            <div className={`absolute inset-0 overflow-y-auto p-4 md:p-8 custom-scrollbar ${activeTab === 'pengaturan' ? 'block' : 'hidden'}`}><div className="max-w-6xl mx-auto"><PengaturanAkun authCredentials={authCredentials} updateAuth={updateAuthInCloud} showToast={showToast} /></div></div>
                         </div>
                     </main>
                 </div>
