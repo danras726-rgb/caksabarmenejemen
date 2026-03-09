@@ -88,6 +88,15 @@
             Settings: (props) => <Icon path='<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>' {...props} />
         };
 
+        // --- SISTEM KEAMANAN ENKRIPSI (HASHING SHA-256) ---
+        // Fungsi ini akan mengacak password menjadi kode rahasia yang tidak bisa dibaca manusia
+        const hashPassword = async (password) => {
+            const msgUint8 = new TextEncoder().encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        };
+
         // --- BANTUAN TANGGAL & FORMAT ---
         const today = new Date();
         const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
@@ -115,10 +124,10 @@
             { id: 1, name: 'Pak Haji Rohman', hutang: 0, lastTx: null }
         ];
 
-        // Default Login Akun
+        // Default Login Akun (Sandi "123" yang sudah dienkripsi, sangat aman)
         const defaultAuth = {
-            admin: { user: 'owner', pass: '123' },
-            pos: { user: 'pegawai', pass: '123' }
+            admin: { user: 'owner', pass: 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3' },
+            pos: { user: 'pegawai', pass: 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3' }
         };
 
         const menuPackages = [
@@ -147,15 +156,18 @@
             const [username, setUsername] = useState('');
             const [password, setPassword] = useState('');
 
-            const handleLogin = (e) => {
+            const handleLogin = async (e) => {
                 e.preventDefault();
                 // Mengambil data dari Cloud atau memakai Default jika Cloud kosong
                 const creds = authCredentials || defaultAuth;
+                
+                // Enkripsi kata sandi yang diketik user sebelum dicocokkan
+                const hashedInput = await hashPassword(password);
 
-                if (username === creds.admin.user && password === creds.admin.pass) {
+                if (username === creds.admin.user && hashedInput === creds.admin.pass) {
                     onLogin({ name: 'Bpk. Owner', role: 'admin' });
                     showToast('Berhasil login sebagai Owner');
-                } else if (username === creds.pos.user && password === creds.pos.pass) {
+                } else if (username === creds.pos.user && hashedInput === creds.pos.pass) {
                     onLogin({ name: 'Kasir Sate', role: 'pos' });
                     showToast('Berhasil login sebagai Pegawai');
                 } else {
@@ -183,7 +195,6 @@
                                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                         <Icons.User size={18} className="text-slate-400" />
                                     </div>
-                                    {/* Placeholder diperbarui menjadi lebih aman */}
                                     <input type="text" value={username} onChange={e => setUsername(e.target.value)} required placeholder="Masukkan username akun Anda" className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none text-sm text-slate-800 transition-all font-medium" />
                                 </div>
                             </div>
@@ -193,7 +204,6 @@
                                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                         <Icons.Briefcase size={18} className="text-slate-400" />
                                     </div>
-                                    {/* Placeholder diperbarui menjadi lebih aman */}
                                     <input type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="Masukkan kata sandi rahasia" className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none text-sm text-slate-800 transition-all font-medium" />
                                 </div>
                             </div>
@@ -207,11 +217,30 @@
         // --- KOMPONEN TAB ---
 
         const PengaturanAkun = ({ authCredentials, updateAuth, showToast }) => {
-            const [form, setForm] = useState(authCredentials || defaultAuth);
+            const creds = authCredentials || defaultAuth;
+            
+            // Password diset kosong di awal agar sandi acak (hash) tidak terlihat di layar
+            const [adminUser, setAdminUser] = useState(creds.admin.user);
+            const [adminPass, setAdminPass] = useState('');
+            const [posUser, setPosUser] = useState(creds.pos.user);
+            const [posPass, setPosPass] = useState('');
 
-            const handleSave = (e) => {
+            const handleSave = async (e) => {
                 e.preventDefault();
-                updateAuth(form);
+                
+                // Jika input password diisi, enkripsi sandi baru. Jika dikosongkan, gunakan sandi lama.
+                const newAdminPass = adminPass ? await hashPassword(adminPass) : creds.admin.pass;
+                const newPosPass = posPass ? await hashPassword(posPass) : creds.pos.pass;
+
+                await updateAuth({
+                    admin: { user: adminUser, pass: newAdminPass },
+                    pos: { user: posUser, pass: newPosPass }
+                });
+                
+                // Bersihkan kolom password setelah disimpan
+                setAdminPass('');
+                setPosPass('');
+                
                 showToast('Informasi login berhasil diperbarui di Cloud!');
             };
 
@@ -219,7 +248,7 @@
                 <div className="space-y-6 animate-fade-in pb-10">
                     <div>
                         <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Pengaturan Akses Login</h2>
-                        <p className="text-sm text-slate-500 mt-1">Ubah username dan password untuk keamanan sistem warung Anda.</p>
+                        <p className="text-sm text-slate-500 mt-1">Ubah username dan password untuk keamanan sistem warung Anda. Sandi Anda dienkripsi penuh.</p>
                     </div>
 
                     <form onSubmit={handleSave} className="space-y-6">
@@ -237,11 +266,11 @@
                                 <div className="space-y-4 relative z-10">
                                     <div>
                                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Username Admin Baru</label>
-                                        <input type="text" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 text-sm font-medium text-slate-800 transition-all" value={form.admin.user} onChange={e => setForm({...form, admin: {...form.admin, user: e.target.value}})} required />
+                                        <input type="text" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 text-sm font-medium text-slate-800 transition-all" value={adminUser} onChange={e => setAdminUser(e.target.value)} required />
                                     </div>
                                     <div>
                                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Password Admin Baru</label>
-                                        <input type="text" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 text-sm font-medium text-slate-800 transition-all" value={form.admin.pass} onChange={e => setForm({...form, admin: {...form.admin, pass: e.target.value}})} required />
+                                        <input type="text" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 text-sm font-medium text-slate-800 transition-all placeholder-slate-400" placeholder="Ketik sandi baru (kosongkan jika tidak diubah)" value={adminPass} onChange={e => setAdminPass(e.target.value)} />
                                     </div>
                                 </div>
                             </div>
@@ -259,11 +288,11 @@
                                 <div className="space-y-4 relative z-10">
                                     <div>
                                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Username Kasir Baru</label>
-                                        <input type="text" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm font-medium text-slate-800 transition-all" value={form.pos.user} onChange={e => setForm({...form, pos: {...form.pos, user: e.target.value}})} required />
+                                        <input type="text" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm font-medium text-slate-800 transition-all" value={posUser} onChange={e => setPosUser(e.target.value)} required />
                                     </div>
                                     <div>
                                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Password Kasir Baru</label>
-                                        <input type="text" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm font-medium text-slate-800 transition-all" value={form.pos.pass} onChange={e => setForm({...form, pos: {...form.pos, pass: e.target.value}})} required />
+                                        <input type="text" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm font-medium text-slate-800 transition-all placeholder-slate-400" placeholder="Ketik sandi baru (kosongkan jika tidak diubah)" value={posPass} onChange={e => setPosPass(e.target.value)} />
                                     </div>
                                 </div>
                             </div>
