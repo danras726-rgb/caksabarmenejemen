@@ -1,0 +1,48 @@
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #f6f1ea; border-radius: 10px; }
+::-webkit-scrollbar-thumb { background: #d6c4ae; border-radius: 10px; border: 2px solid #f6f1ea; }
+::-webkit-scrollbar-thumb:hover { background: #c17f3e; }
+input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0.6; cursor: pointer; transition: 0.2s; }
+input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+@keyframes slideDown { from { opacity: 0; max-height: 0; } to { opacity: 1; max-height: 800px; } }
+.animate-slide-down { animation: slideDown 0.28s ease-out forwards; overflow: hidden; }
+
+.page-shell {
+    background:
+        radial-gradient(1200px 400px at 10% -10%, rgba(193, 127, 62, 0.08), transparent 50%),
+        radial-gradient(800px 300px at 100% 0%, rgba(15, 118, 110, 0.06), transparent 45%);
+}
+
+.soft-card {
+    background: #ffffff;
+    border: 1px solid #efe6d9;
+    box-shadow: 0 10px 30px -18px rgba(92, 64, 40, 0.35);
+}
+
+.field-input {
+    width: 100%;
+    padding: 0.95rem 1rem;
+    background: #fbf8f4;
+    border: 1px solid #e8dccb;
+    border-radius: 1rem;
+    outline: none;
+    color: #44403c;
+    font-weight: 600;
+    transition: box-shadow 0.2s, border-color 0.2s, background 0.2s;
+}
+.field-input:focus {
+    background: #fff;
+    border-color: #c17f3e;
+    box-shadow: 0 0 0 4px rgba(193, 127, 62, 0.12);
+}
+.field-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #78716c;
+    margin-bottom: 0.5rem;
+}

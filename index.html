@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SateGule Management (Live Cloud)</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, addDoc, updateDoc, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        // Menyimpan library Firebase ke global window agar bisa dipakai oleh React/Babel
+        window.FirebaseLib = { initializeApp, getFirestore, collection, onSnapshot, addDoc, updateDoc, doc, setDoc, deleteDoc, getAuth, signInAnonymously, onAuthStateChanged };
+    </script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['DM Sans', 'ui-sans-serif', 'system-ui', 'sans-serif'] },
+                    colors: {
+                        brand: { 50: '#f8f4ee', 100: '#efe4d4', 200: '#e0c9a8', 400: '#d4a574', 500: '#c17f3e', 600: '#a86a32', 700: '#8b5528', 800: '#5c4028' },
+                        cream: { 50: '#fbf8f4', 100: '#f6f1ea', 200: '#efe6d9' }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-cream-100 text-stone-700 selection:bg-brand-500/20 overflow-hidden font-sans">
+    <div id="root"></div>
+
+    <script type="text/babel" src="script.js"></script>
+</body>
+</html>
